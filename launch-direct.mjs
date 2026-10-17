@@ -1,10 +1,11 @@
 import Busboy from 'busboy';
 import { Connection, Keypair, PublicKey, TransactionMessage, VersionedTransaction, SystemProgram } from '@solana/web3.js';
-import { createAssociatedTokenAccountIdempotentInstruction, getAssociatedTokenAddressSync, createInitializeMint2Instruction, createMintToInstruction, MINT_SIZE, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { PUMP_SDK } from '@pump-fun/pump-sdk';
 import BN from 'bn.js';
 const UNCURVE_SITE = 'https://uncurve-launch.vercel.app';
 const DB_REF = process.env.WEBD_SUPABASE_PROJECT_REF || 'saneojmlgtmvtglgwdcj';
 const FALLBACK_IQ_SECRET = 'iq-local-dev-secret';
+const CREATOR_FEE_RECIPIENT = process.env.INTERACT_CREATOR_FEE_RECIPIENT || '5ABeaFSQ3UNmKgGouX1HTrsCzTE7NDFxc3Q6Yggp8TsL';
 function sqlText(value){return `'${String(value??'').replaceAll("'","''")}'`;}
 async function dbQuery(query){const token=process.env.WEBD_SUPABASE_MANAGEMENT_TOKEN;if(!token)return null;const r=await fetch(`https://api.supabase.com/v1/projects/${DB_REF}/database/query`,{method:'POST',headers:{Authorization:`Bearer ${token}`,'content-type':'application/json'},body:JSON.stringify({query}),signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error(`Index database returned ${r.status}`);return r.json();}
 async function savePrepared(record){return dbQuery(`insert into public.webd_launches (mint,name,symbol,description,domain_site,token_directory,metadata_uri,initial_buy_sol,status) values (${sqlText(record.mint)},${sqlText(record.name)},${sqlText(record.symbol)},${sqlText(record.description)},${sqlText(record.domainSite)},${sqlText(record.tokenDirectory)},${sqlText(record.metadataUri)},${sqlText(record.initialBuySol)},'prepared') on conflict (mint) do update set name=excluded.name,symbol=excluded.symbol,description=excluded.description,domain_site=excluded.domain_site,token_directory=excluded.token_directory,metadata_uri=excluded.metadata_uri,initial_buy_sol=excluded.initial_buy_sol,status='prepared'`);}
@@ -56,14 +57,12 @@ export async function directPrepare(req) {
   const decimals=Number(body.decimals); const supplyText=String(body.totalSupply||'');
   if(!name || new TextEncoder().encode(name).length>32 || !/^[A-Z0-9]{1,10}$/.test(symbol) || description.length>1000) fail('Invalid token name, ticker, or description.');
   if(!Number.isInteger(decimals)||decimals<0||decimals>9||!/^[1-9]\d*$/.test(supplyText)) fail('Enter a valid supply and decimals value.');
-  const supply=BigInt(supplyText)*10n**BigInt(decimals); if(supply<1n||supply>18446744073709551615n) fail('The scaled supply must fit in a Solana token mint.',422);
   const rpc=process.env.SOLANA_RPC_URL||process.env.LOOT_RPC_URL||'https://api.mainnet-beta.solana.com'; const connection=new Connection(rpc,'confirmed');
   const baseUrl=String(process.env.SITE_URL||process.env.NEXT_PUBLIC_SITE_URL||UNCURVE_SITE).replace(/\/$/,'');
-  const mint=Keypair.generate(); const tokenDirectory=`${baseUrl}/${mint.publicKey.toBase58()}`; const uri=await uploadMetadata(mint.publicKey,image,{name,symbol,description},tokenDirectory); const latest=await connection.getLatestBlockhash('confirmed');
-  const rent=await connection.getMinimumBalanceForRentExemption(MINT_SIZE); const ata=getAssociatedTokenAddressSync(mint.publicKey,wallet,false,TOKEN_PROGRAM_ID);
-  const instructions=[SystemProgram.createAccount({fromPubkey:wallet,newAccountPubkey:mint.publicKey,lamports:rent,space:MINT_SIZE,programId:TOKEN_PROGRAM_ID}),createInitializeMint2Instruction(mint.publicKey,decimals,wallet,null,TOKEN_PROGRAM_ID),createAssociatedTokenAccountIdempotentInstruction(wallet,ata,wallet,mint.publicKey,TOKEN_PROGRAM_ID),createMintToInstruction(mint.publicKey,ata,wallet,supply.toString(),[],TOKEN_PROGRAM_ID)];
+  const mint=Keypair.generate(); const feeRecipient=new PublicKey(CREATOR_FEE_RECIPIENT); const tokenDirectory=`${baseUrl}/${mint.publicKey.toBase58()}`; const uri=await uploadMetadata(mint.publicKey,image,{name,symbol,description},tokenDirectory); const latest=await connection.getLatestBlockhash('confirmed');
+  const instructions=[await PUMP_SDK.createV2Instruction({ mint:mint.publicKey, name, symbol, uri, creator:feeRecipient, user:wallet, mayhemMode:false })];
   const message=new TransactionMessage({payerKey:wallet,recentBlockhash:latest.blockhash,instructions}).compileToV0Message(); const tx=new VersionedTransaction(message); tx.sign([mint]); if(tx.serialize().length>1232) fail('Launch transaction is too large for Solana packet limits.',422);
-  const result={intentId:mint.publicKey.toBase58(),mint:mint.publicKey.toBase58(),website:tokenDirectory,domainSite:baseUrl,tokenDirectory,transactions:[{phase:'create',transaction:Buffer.from(tx.serialize()).toString('base64')}],platformFeeSol:'0',bondingCurve:false,totalSupply:supplyText,decimals,creatorWallet:wallet.toBase58(),name,symbol,description,metadataUri:uri}; await savePrepared({mint:mint.publicKey.toBase58(),name,symbol,description,domainSite:baseUrl,tokenDirectory,metadataUri:uri,initialBuySol:'0'}); return result;
+  const result={intentId:mint.publicKey.toBase58(),mint:mint.publicKey.toBase58(),website:tokenDirectory,domainSite:baseUrl,tokenDirectory,transactions:[{phase:'create',transaction:Buffer.from(tx.serialize()).toString('base64')}],platformFeeSol:'0',bondingCurve:true,totalSupply:supplyText,decimals,creatorWallet:wallet.toBase58(),creatorFeeRecipient:feeRecipient.toBase58(),name,symbol,description,metadataUri:uri}; await savePrepared({mint:mint.publicKey.toBase58(),name,symbol,description,domainSite:baseUrl,tokenDirectory,metadataUri:uri,initialBuySol:'0'}); return result;
 }
 export async function directConfirm(body) {
   const mint=new PublicKey(String(body.intentId||'')); const encoded=String(body.transaction||''); if(!encoded||encoded.length>10000) fail('The signed launch transaction is required.'); const tx=VersionedTransaction.deserialize(Buffer.from(encoded,'base64')); const keys=tx.message.staticAccountKeys.map(k=>k.toBase58()); if(!keys.includes(mint.toBase58())) fail('Signed transaction does not match the launch intent.');
