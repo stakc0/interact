@@ -112,6 +112,7 @@ function tokenCard(t) { const pr = projCache(t.mint); return `<a class="icard" h
 const accounts = () => Object.values(S.acc);
 let _gb = null, _gbAt = 0;
 const globalBoard = () => { if (!_gb || Date.now() - _gbAt > 1500) { _gb = En.globalBoard(); _gbAt = Date.now(); } return _gb; };
+const liveBoard = () => { const rows = globalBoard().slice(); const seen = new Set(rows.map(r => r.h)); for (const a of accounts().filter(x => x.oauth && !seen.has(x.handle))) { rows.push({ h: a.handle, amt: 0, score: 0, coins: 0, posts: 0, oauth: true }); } return rows; };
 
 /* ---------- pages ---------- */
 function home() { queue(initFeed);
@@ -123,7 +124,7 @@ function home() { queue(initFeed);
   <section class="bento2">
     <div class="bx half"><a class="cover" href="#explore" aria-label="Explore coins"></a><div class="feedwrap"><div class="plistv" id="hfeed"></div></div><div class="bfoot"><span>Live posts</span><span>Explore →</span></div></div>
     <div class="bx half"><a class="cover" href="#board" aria-label="Open leaderboard"></a><div class="bin"><div class="bt"><span class="lab">Epoch #<span id="hEp">${en(S.epoch)}</span> ends in</span><span class="lab" id="hSpeed"></span></div><div class="bigcd" data-cd style="margin:8px 0 12px">${left(En.eEnd(S.epoch) - now())}</div><div class="ring" data-ring><i></i></div>
-      ${live('hMini', () => { const g = globalBoard().slice(0, 4); return `<div class="lab" style="margin-top:14px">Projected leaders</div><ul class="mini2">${g.map((r, i) => { const a = A(r.h); return `<li><span class="rk">${i + 1}</span>${av(a, 24)}<span class="nm">${esc(a.name)}</span><span class="mono">${sol(r.amt)}</span></li>`; }).join('') || '<li class="faint">No eligible posts yet this epoch.</li>'}</ul>`; })}</div><div class="bfoot"><span>Leaderboard</span><span>Open →</span></div></div>
+      ${live('hMini', () => { const g = liveBoard().slice(0, 4); return `<div class="lab" style="margin-top:14px">Projected leaders</div><ul class="mini2">${g.map((r, i) => { const a = A(r.h); return `<li><span class="rk">${i + 1}</span>${av(a, 24)}<span class="nm">${esc(a.name)}</span><span class="mono">${sol(r.amt)}</span></li>`; }).join('') || '<li class="faint">No eligible posts yet this epoch.</li>'}</ul>`; })}</div><div class="bfoot"><span>Leaderboard</span><span>Open →</span></div></div>
     <div class="bx"><a class="cover" href="#docs-fees" aria-label="Where fees go"></a><div class="bin"><div class="eyebrow">Where creator fees go</div>${live('hSplit', splitBar)}<div class="zero"><span>Deployer share</span><b>0%</b></div><p class="hint" style="margin-top:10px">Locked at launch. There's no field for it.</p></div><div class="bfoot"><span>Fee split</span><span>Docs →</span></div></div>
     <div class="bx"><a class="cover" href="#docs-score" aria-label="Scoring"></a><div class="bin"><div class="eyebrow">Post score</div><div class="formula" style="margin-top:10px;font-size:12px;padding:12px">target action
  × verified account
@@ -180,8 +181,8 @@ function meChecks(t) { const me = ME(); const c = [[!!me, 'Signed in with X', me
 
 function board() { return `<div class="phead"><div><span class="eyebrow">Leaderboard</span><h1 style="margin-top:10px">Top interacters</h1><p>This epoch shows projected payouts across every coin if it ended now. All time shows what has been paid.</p></div><div style="text-align:right"><div class="lab">Epoch #${en(S.epoch)} ends in</div><div class="bigcd" style="font-size:36px" data-cd>${left(En.eEnd(S.epoch) - now())}</div></div></div>
   <div class="panel"><div class="ph">${seg('bTab', [['epoch', 'This epoch'], ['all', 'All time']], 'bMain', 'bPage')}</div>
-  <div class="pb">${live('bMain', () => { if (ui.bTab === 'epoch') return lbTable(globalBoard().map(r => ({ ...r, a: A(r.h) })), 'bPage', 'bMain', false);
-    const arr = accounts().filter(a => a.earned > 0).sort((a, b) => b.earned - a.earned).map(a => ({ a, amt: a.earned, coins: Object.keys(a.hold).length, posts: a.posts })); return lbTable(arr, 'bPage', 'bMain', false); })}</div></div>`; }
+  <div class="pb">${live('bMain', () => { if (ui.bTab === 'epoch') return lbTable(liveBoard().map(r => ({ ...r, a: A(r.h) })), 'bPage', 'bMain', false);
+    const arr = accounts().filter(a => a.oauth).sort((a, b) => b.earned - a.earned).map(a => ({ a, amt: a.earned, coins: Object.keys(a.hold).length, posts: a.posts })); return lbTable(arr, 'bPage', 'bMain', false); })}</div></div>`; }
 
 function userPage(h) { const a = A(h); if (!a) return notFound(); const flags = [a.age < cfg().minAge ? `${a.age}-day-old account` : null, !a.linked ? 'No wallet linked' : null, a.farm ? 'Low-quality engagement' : null, a.banned ? 'Suspended' : null].filter(Boolean);
   return `<div class="banner" style="background:${banner(a)}"></div><div class="pmeta"><img class="av bigav" src="${aimg(a)}" alt="" width="104" height="104" style="width:104px;height:104px">
