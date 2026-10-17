@@ -506,6 +506,8 @@ details.more summary svg{width:14px;height:14px;transition:transform .2s}
 .hero2 h1{font-size:clamp(40px,6vw,74px);font-weight:600;letter-spacing:-.055em;line-height:1.03}
 .hero2 h1 .hpm{display:inline-block;width:.74em;height:.74em;vertical-align:-.03em;margin-right:.06em}
 .hero2 p{max-width:34em;color:var(--ink-2);font-size:18px;line-height:1.75;margin:22px 0 32px}
+.interact-loop{display:block;width:min(100%,920px);aspect-ratio:16/9;object-fit:cover;border:1px solid var(--line);border-radius:18px;background:#0b1715;box-shadow:0 20px 60px rgba(20,55,49,.14);margin:8px 0 34px}
+@media(max-width:620px){.interact-loop{border-radius:12px;margin:2px 0 26px}}
 .vpill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px 0 6px;border:1px solid var(--line);border-radius:999px;color:var(--ink);font-size:15px;vertical-align:middle;background:var(--surface);line-height:1}
 .vpill svg{width:18px;height:18px}
 .ctas.center{justify-content:center}
