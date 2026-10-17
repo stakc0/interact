@@ -7,11 +7,7 @@
     "node": "22.x"
   },
   "scripts": {
-    "dev": "npm run build && node server.mjs",
-    "build": "node --check server.mjs && node --check launch-direct.mjs && node --check assets/js/launch.js && node --check assets/js/launch-v2.js && node --check 'api/[...path].js'",
-    "start": "node server.mjs",
-    "preview": "node server.mjs",
-    "test": "node --test tests/*.test.mjs"
+    "build": "node --check app.js && node --check 'api/[...path].js' && node --check launch-direct.mjs"
   },
   "dependencies": {
     "@pump-fun/pump-sdk": "^4.0.0",
