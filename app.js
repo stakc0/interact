@@ -15,6 +15,11 @@ const hash = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.char
 const fmtN = n => n >= 1e4 ? cmp(n) : n.toLocaleString('en-US');
 const { MIN, HR } = En;
 const LOGO = (document.querySelector('.sbrand img') || {}).src || '/interact-logo.png';
+const SUPABASE_URL = 'https://saneojmlgtmvtglgwdcj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhbmVvam1sZ3RtdnRnbGd3ZGNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2MzA0MTIsImV4cCI6MjEwMDIwNjQxMn0.XeLgLHKF7_LiNQwL6zAgZqU67L52iHpMwlkhKM5HSDo';
+const SB = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function syncSupabaseSession() { if (!SB) return; const { data } = await SB.auth.getSession(); const token = data?.session?.provider_token; if (token) await fetch('/api/x/session', { method:'POST', headers:{'content-type':'application/json'}, credentials:'same-origin', body:JSON.stringify({ accessToken: token }) }); }
+
 
 let S = null, MODE = 'server', LOCAL = null, SESS = { handle: null }, ui = {};
 const now = () => En.now(), A = h => S.acc[h], T = m => S.tmap[m], cfg = () => S.cfg;
@@ -112,7 +117,7 @@ const globalBoard = () => { if (!_gb || Date.now() - _gbAt > 1500) { _gb = En.gl
 function home() { queue(initFeed);
   return `<section class="hero2"><h1>Turn real interaction<br>into ownership</h1>
     <p>Each launch names a target account and a required action. When verified X interaction happens, the eligible user unlocks the claim.</p>
-    <div class="ctas center"><a class="btn pri lg" href="#launch">Launch a coin</a><a class="btn lg" href="#earn">Start claiming</a><a class="btn lg" href="/api/x/oauth/start">Connect X</a></div></section>
+    <div class="ctas center"><a class="btn pri lg" href="#launch">Launch a coin</a><a class="btn lg" href="#earn">Start claiming</a><a class="btn lg" href="#earn" data-act="supabaseSignin">Connect X</a></div></section>
   <section class="sec"><div class="deploy-banner"><div class="deploy-brand"><img src="https://pump.fun/pump-logomark.svg?dpl=dpl_F1kMU14PnLUU1vwgNv7nAQBtLtqX" alt="pump.fun" width="34" height="34"><div><strong>Interact is now live on pump.fun</strong><span>Official contract address</span></div></div><a class="mono" href="https://pump.fun/coin/CcqXU2nnLF9dmiZwzjMqMcej2DyRWteu46sLMuW3pump" target="_blank" rel="noopener">CcqXU2nnLF9dmiZwzjMqMcej2DyRWteu46sLMuW3pump ↗</a></div><div class="panel deploy-wait"><span class="pill"><span class="dot"></span>Tracking live market data</span><h2>Interact is indexing live launches</h2><p class="muted">Market cap, volume, and launch images are pulled from Dexscreener and launch metadata.</p></div></section>
   <section class="bento2">
     <div class="bx half"><a class="cover" href="#explore" aria-label="Explore coins"></a><div class="feedwrap"><div class="plistv" id="hfeed"></div></div><div class="bfoot"><span>Live posts</span><span>Explore →</span></div></div>
@@ -190,7 +195,7 @@ function earnPage() { if (!ui.earnMint || !T(ui.earnMint)) ui.earnMint = (S.toke
   return `<div class="phead"><div><span class="eyebrow">Claim</span><h1 style="margin-top:10px">Create the proof. Unlock the claim.</h1><p>${false ? 'Demo disabled.' : 'Connect X, create the required post, and let Interact verify the target account action before unlocking your claim.'}</p></div></div>
   <div class="ea"><div class="panel"><div class="pb" style="padding-top:20px" id="eSteps">${earnSteps()}</div></div><aside class="side">${live('eMe', earnSide)}</aside></div>`; }
 function earnSteps() { const me = ME(), t = T(ui.earnMint); const st = (n, done, title, body) => `<div class="estep${done ? ' done' : ''}"><span class="num">${done ? '✓' : n}</span><div class="body"><h3>${title}</h3>${body}</div></div>`;
-  const s1 = me ? `<p class="muted">Verified as <b>@${esc(me.handle)}</b>. <button class="lnk" data-act="signout">Sign out</button></p>` : `<p class="muted">Use X OAuth to verify the account that will submit the interaction proof.</p><a class="btn pri" href="/api/x/oauth/start" style="align-self:flex-start">Verify with X</a>`;
+  const s1 = me ? `<p class="muted">Verified as <b>@${esc(me.handle)}</b>. <button class="lnk" data-act="signout">Sign out</button></p>` : `<p class="muted">Use X OAuth to verify the account that will submit the interaction proof.</p><a class="btn pri" href="#earn" data-act="supabaseSignin" style="align-self:flex-start">Verify with X</a>`;
   if (!t) return `<div class="stepbox">${st(1, !!me, 'Verify with X', s1)}${st(2, false, 'Submit proof', '<p class="muted">No indexed launches are available yet.</p>')}</div>`;
   const opts = S.tokens.map(x => `<option value="${x.mint}" ${x.mint === ui.earnMint ? 'selected' : ''}>$${esc(x.ticker)} · ${esc(x.name)}</option>`).join('');
   const s2 = me ? `<div class="field"><label for="proofLink">Proof link</label><input class="inp" id="proofLink" inputmode="url" autocomplete="off"><span class="hint">Paste the X post link where you created the required interaction. Interact verifies the target account action against X.</span></div><button class="btn pri" data-act="claim" style="align-self:flex-start">Submit proof and claim</button>` : '<p class="muted">Verify with X first, then submit the proof link.</p>';
@@ -202,7 +207,7 @@ function draftList() { const me = ME(), t = T(ui.earnMint), d = D.draft; const n
     [!!me && me.age >= cfg().minAge, `Account ${cfg().minAge}+ days old`, me ? me.age + ' days' : 'Sign in first'], [!!(me && me.linked), 'Wallet linked', me && me.linked ? 'Ready' : 'Step 2'], [!!me && (me.hold[t.mint] || 0) >= 1, 'Holds the minimum', 'Step 3'], [mine < cfg().maxPosts, `Under ${cfg().maxPosts} scoring posts this epoch`, `${mine} of ${cfg().maxPosts} used on $${t.ticker}`]]; }
 const draftChecks = () => `<ul class="checks">${draftList().map(x => `<li><span class="m ${x[0] ? 'y' : 'n'}">${x[0] ? '✓' : ''}</span><span>${x[1]}<small>${x[2]}</small></span></li>`).join('')}</ul>`;
 const draftOk = () => !!ME() && !!D.draft.trim() && draftList().slice(0, 2).every(x => x[0]);
-function earnSide() { const me = ME(); return `<div class="panel"><div class="pb" style="padding-top:18px"><div class="eyebrow">${me ? 'Verified session' : 'Claim access'}</div><p class="muted" style="margin-top:10px">${me ? `@${esc(me.handle)} is ready to submit a proof link.` : 'Connect X to verify your account before submitting proof.'}</p>${me ? '<span class="pill ok" style="margin-top:12px"><span class="dot"></span>OAuth verified</span>' : '<a class="btn pri" href="/api/x/oauth/start" style="margin-top:14px">Verify with X</a>'}</div></div>`; }
+function earnSide() { const me = ME(); return `<div class="panel"><div class="pb" style="padding-top:18px"><div class="eyebrow">${me ? 'Verified session' : 'Claim access'}</div><p class="muted" style="margin-top:10px">${me ? `@${esc(me.handle)} is ready to submit a proof link.` : 'Connect X to verify your account before submitting proof.'}</p>${me ? '<span class="pill ok" style="margin-top:12px"><span class="dot"></span>OAuth verified</span>' : '<a class="btn pri" href="#earn" data-act="supabaseSignin" style="margin-top:14px">Verify with X</a>'}</div></div>`; }
 
 /* ---------- Launch ---------- */
 const L = { name: '', ticker: '', desc: '', img: null, minHold: .05, agree: false, busy: 0, done: null, dev: '', sig: null, target: '', action: 'keyword', keyword: '' };
@@ -328,7 +333,8 @@ const ACT = {
   copy(a) { const o = a.textContent; try { navigator.clipboard.writeText(a.dataset.v).then(() => { a.textContent = 'Copied'; setTimeout(() => a.textContent = o, 1200); }).catch(() => toast('<span>Copy was blocked. Select the text instead.</span>')); } catch (_) { toast('<span>Copy was blocked. Select the text instead.</span>'); } },
   sb() { if (innerWidth <= 900) sbDrawer(!document.body.classList.contains('sbo')); else { const c = document.body.classList.toggle('sbc'); try { localStorage.setItem('echo-sbc', c ? '1' : ''); } catch (_) {} } },
   signin: () => run(async () => { D.handle = ($('#eHandle') || {}).value || ''; D.followers = ($('#eFol') || {}).value || ''; D.age = ($('#eAge') || {}).value || ''; await api('/api/signin', { handle: D.handle, followers: D.followers, age: D.age }); if (MODE === 'local') SESS.handle = D.handle.trim().replace(/^@/, '').toLowerCase(); apply(MODE === 'local' ? localSnap() : await fetchState()); rerenderEarn(); toast(`<span>Signed in as <b>@${esc(S.me)}</b></span>`); }),
-  signout: () => run(async () => { await api('/api/signout', {}); if (MODE === 'local') { SESS.handle = null; apply(localSnap()); } rerenderEarn(); }),
+  signout: () => run(async () => { await SB?.auth.signOut(); document.cookie = 'interact_x_user=; Max-Age=0; Path=/'; if (MODE === 'local') { SESS.handle = null; apply(localSnap()); } apply(await fetchState()); rerenderEarn(); }),
+  supabaseSignin: () => run(async () => { if (!SB) throw new Error('Supabase auth is unavailable.'); const { error } = await SB.auth.signInWithOAuth({ provider: 'x', options: { redirectTo: `${location.origin}/#earn`, scopes: 'users.read tweet.read like.read offline.access' } }); if (error) throw error; }),
   vstart: () => run(async () => { D.handle = ($('#eHandle') || {}).value || ''; const r = await api('/api/verify/start', { handle: D.handle }); D.code = r.code; rerenderEarn(); }),
   vcheck: () => run(async () => { await api('/api/verify/check', {}); D.code = null; rerenderEarn(); toast(`<span>Verified <b>@${esc(S.me)}</b></span>`); }),
   link: () => run(async () => { if (isTest()) await api('/api/link', {}); else await phantomLink(); rerenderEarn(); toast('<span>Wallet linked</span>'); }),
@@ -365,7 +371,7 @@ document.addEventListener('focusout', e => { if (e.target.id === 'gSearch') setT
 /* ---------- boot ---------- */
 ui = { open: new Set(), exSort: 'pool', exQ: '', exPage: 0, tTab: 'posts', tPage: 0, bTab: 'epoch', bPage: 0, uPage: 0, earnMint: null };
 (async function boot() {
-  try { if (location.protocol === 'file:' || window.ECHO_STANDALONE) throw new Error('Open the deployed Interact site to use live data.'); apply(await fetchState()); MODE = 'server'; }
+  try { await syncSupabaseSession(); if (location.protocol === 'file:' || window.ECHO_STANDALONE) throw new Error('Open the deployed Interact site to use live data.'); apply(await fetchState()); MODE = 'server'; }
   catch (e) { MODE = 'server'; document.querySelector('#app').innerHTML = `<p class="empty">${esc(e.message || 'Live data is temporarily unavailable.')}</p>`; return; }
   render(true); setInterval(poll, 30000);
 })();
