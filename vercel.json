@@ -1,7 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://earnclout.fun/api/:path*" },
-    { "source": "/meta/:path*", "destination": "https://earnclout.fun/meta/:path*" },
     { "source": "/:path*", "destination": "/index.html" }
   ]
 }
