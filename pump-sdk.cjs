@@ -1,1 +1,1 @@
-module.exports = require('@pump-fun/pump-sdk');
+module.exports = require('./vendor/pump-sdk.cjs');
