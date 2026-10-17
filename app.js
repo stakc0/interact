@@ -14,7 +14,7 @@ const sum = a => a.reduce((s, v) => s + v, 0);
 const hash = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
 const fmtN = n => n >= 1e4 ? cmp(n) : n.toLocaleString('en-US');
 const { MIN, HR } = En;
-const LOGO = (document.querySelector('.sbrand img') || {}).src || '/logo-96.png';
+const LOGO = (document.querySelector('.sbrand img') || {}).src || '/interact-logo.png';
 
 let S = null, MODE = 'server', LOCAL = null, SESS = { handle: null }, ui = {};
 const now = () => En.now(), A = h => S.acc[h], T = m => S.tmap[m], cfg = () => S.cfg;
@@ -112,8 +112,8 @@ const globalBoard = () => { if (!_gb || Date.now() - _gbAt > 1500) { _gb = En.gl
 function home() { queue(initFeed);
   return `<section class="hero2"><h1>Turn real interaction<br>into ownership</h1>
     <p>Each launch names a target account and a required action. When verified X interaction happens, the eligible user unlocks the claim.</p>
-    <div class="ctas center"><a class="btn pri lg" href="#launch">Launch a coin</a><a class="btn lg" href="#earn">Start earning</a><a class="btn lg" href="/api/x/oauth/start">Connect X</a></div></section>
-  <section class="sec"><div class="deploy-banner"><div class="deploy-brand"><img src="https://pump.fun/pump-logomark.svg?dpl=dpl_F1kMU14PnLUU1vwgNv7nAQBtLtqX" alt="pump.fun" width="34" height="34"><div><strong>Interact is now live on pump.fun</strong><span>Official contract address</span></div></div><a class="mono" href="https://pump.fun/coin/CcqXU2nnLF9dmiZwzjMqMcej2DyRWteu46sLMuW3pump" target="_blank" rel="noopener">CcqXU2nnLF9dmiZwzjMqMcej2DyRWteu46sLMuW3pump ↗</a></div><div class="panel deploy-wait"><span class="pill"><span class="dot"></span>Waiting for deploy</span><h2>Interact launch is being prepared</h2><p class="muted">The Interact contract is live on pump.fun. New Interact deployments will appear here automatically once indexed.</p></div></section>
+    <div class="ctas center"><a class="btn pri lg" href="#launch">Launch a coin</a><a class="btn lg" href="#earn">Start claiming</a><a class="btn lg" href="/api/x/oauth/start">Connect X</a></div></section>
+  <section class="sec"><div class="deploy-banner"><div class="deploy-brand"><img src="https://pump.fun/pump-logomark.svg?dpl=dpl_F1kMU14PnLUU1vwgNv7nAQBtLtqX" alt="pump.fun" width="34" height="34"><div><strong>Interact is now live on pump.fun</strong><span>Official contract address</span></div></div><a class="mono" href="https://pump.fun/coin/CcqXU2nnLF9dmiZwzjMqMcej2DyRWteu46sLMuW3pump" target="_blank" rel="noopener">CcqXU2nnLF9dmiZwzjMqMcej2DyRWteu46sLMuW3pump ↗</a></div><div class="panel deploy-wait"><span class="pill"><span class="dot"></span>Tracking live market data</span><h2>Interact is indexing live launches</h2><p class="muted">Market cap, volume, and launch images are pulled from Dexscreener and launch metadata.</p></div></section>
   <section class="bento2">
     <div class="bx half"><a class="cover" href="#explore" aria-label="Explore coins"></a><div class="feedwrap"><div class="plistv" id="hfeed"></div></div><div class="bfoot"><span>Live posts</span><span>Explore →</span></div></div>
     <div class="bx half"><a class="cover" href="#board" aria-label="Open leaderboard"></a><div class="bin"><div class="bt"><span class="lab">Epoch #<span id="hEp">${en(S.epoch)}</span> ends in</span><span class="lab" id="hSpeed"></span></div><div class="bigcd" data-cd style="margin:8px 0 12px">${left(En.eEnd(S.epoch) - now())}</div><div class="ring" data-ring><i></i></div>
@@ -123,7 +123,7 @@ function home() { queue(initFeed);
  × verified account
  × keyword proof
  × claimant wallet</div></div><div class="bfoot"><span>Scoring</span><span>Docs →</span></div></div>
-    <div class="bx"><a class="cover" href="#earn" aria-label="Start earning"></a><div class="bin"><div class="eyebrow">To unlock a claim you need</div><ul class="checks" style="margin-top:12px">
+    <div class="bx"><a class="cover" href="#earn" aria-label="Start claiming"></a><div class="bin"><div class="eyebrow">To unlock a claim you need</div><ul class="checks" style="margin-top:12px">
       <li><span class="m y">✓</span><span>An X account ${cfg().minAge}+ days old</span></li><li><span class="m y">✓</span><span>A linked Solana wallet</span></li><li><span class="m y">✓</span><span>The coin's minimum hold</span></li><li><span class="m y">✓</span><span>${esc(cfg().disclose[0])} in the post</span></li></ul></div><div class="bfoot"><span>Earn</span><span>Start →</span></div></div>
   </section>
   <section class="sec">${live('hStats', () => `<div class="kstats"><div><div class="eyebrow">Paid to interacters</div><div class="v">${sol(S.paidTotal)}</div><div class="n">All epochs</div></div><div><div class="eyebrow">Paid to deployers</div><div class="v">0 SOL</div><div class="n">By design</div></div><div><div class="eyebrow">Interactors paid</div><div class="v">${accounts().filter(a => a.earned > 0).length}</div><div class="n">Unique accounts</div></div><div><div class="eyebrow">Coins</div><div class="v">${S.tokens.length}</div><div class="n">${isTest() ? 'Test coins' : 'Registered'}</div></div></div>`)}</section>`; }
@@ -146,7 +146,7 @@ function tokenPage(mint) { const t = T(mint); if (!t) return notFound();
   <div class="thead">${tk(t, 72)}<div style="min-width:0"><h1><span class="mono" style="font-size:.5em;color:var(--ink-3);letter-spacing:0">$${esc(t.ticker)}</span><br>${esc(t.name)}</h1>
    <div class="meta"><span class="pill">Launched ${ago(t.created)} ago</span><span class="pill">Min hold ${t.minHold}%</span>${t.sim ? '<span class="pill">Test coin</span>' : `<a class="pill" target="_blank" rel="noopener" href="https://pump.fun/coin/${t.mint}">Trade on pump.fun ↗</a>${t.graduated ? '<span class="pill">Graduated</span>' : ''}${t.caOnly ? '<span class="pill" title="This ticker is busy on X, so posts must include the contract address">Post with contract address</span>' : ''}`}<button class="pill" style="border:0" data-act="copy" data-v="${t.mint}">${short(t.mint)} ⧉</button></div></div>
    <div class="mc"><div class="eyebrow">Market cap</div><div class="v">${live('tMc', () => t.mc ? usdC(t.mc) : '—')}</div></div></div>
-  ${live('tStats', () => { const pr = projCache(t.mint); return `<div class="kstats"><div><div class="eyebrow">Market status</div><div class="v">Waiting for deploy</div><div class="n">Interact is being indexed on pump.fun</div></div><div><div class="eyebrow">Pays out in</div><div class="v" data-cd>${left(En.eEnd(S.epoch) - now())}</div><div class="n">Every ${cfg().epochMin} minutes</div></div><div><div class="eyebrow">Interactors now</div><div class="v">${pr.rows.length}</div><div class="n">${pr.posts} posts · ${pr.inel} not eligible</div></div><div><div class="eyebrow">Paid all time</div><div class="v">${sol(t.paid)}</div><div class="n">Deployer received 0 SOL</div></div></div>`; })}
+  ${live('tStats', () => { const pr = projCache(t.mint); return `<div class="kstats"><div><div class="eyebrow">Market status</div><div class="v">Live</div><div class="n">Dexscreener indexing active</div></div><div><div class="eyebrow">Pays out in</div><div class="v" data-cd>${left(En.eEnd(S.epoch) - now())}</div><div class="n">Every ${cfg().epochMin} minutes</div></div><div><div class="eyebrow">Interactors now</div><div class="v">${pr.rows.length}</div><div class="n">${pr.posts} posts · ${pr.inel} not eligible</div></div><div><div class="eyebrow">Paid all time</div><div class="v">${sol(t.paid)}</div><div class="n">Deployer received 0 SOL</div></div></div>`; })}
   <div class="tlay" style="margin-top:16px"><div class="panel" style="min-width:0"><div class="tabs" role="group">
     ${[['posts', 'Earning posts'], ['board', 'Projected payouts'], ['past', 'Past epochs']].map(([v, l]) => `<button data-act="set" data-k="tTab" data-v="${v}" data-r="tMain" data-reset="tPage" aria-pressed="${ui.tTab === v}">${l}</button>`).join('')}</div>
     <div class="pb" style="padding-top:12px">${live('tMain', () => tokenMain(t))}</div></div>
@@ -187,7 +187,7 @@ function userPage(h) { const a = A(h); if (!a) return notFound(); const flags = 
 /* ---------- Earn ---------- */
 const D = { draft: '', handle: '', followers: '1200', age: '420', code: null };
 function earnPage() { if (!ui.earnMint || !T(ui.earnMint)) ui.earnMint = (S.tokens.slice().sort((a, b) => b.pool - a.pool)[0] || {}).mint;
-  return `<div class="phead"><div><span class="eyebrow">Claim</span><h1 style="margin-top:10px">Create the proof. Unlock the claim.</h1><p>${isTest() ? 'Test mode: sign in with any handle, hold with fake SOL and write posts here. Engagement is simulated.' : 'Connect X, create the required post, and let Interact verify the target account action before unlocking your claim.'}</p></div></div>
+  return `<div class="phead"><div><span class="eyebrow">Claim</span><h1 style="margin-top:10px">Create the proof. Unlock the claim.</h1><p>${false ? 'Demo disabled.' : 'Connect X, create the required post, and let Interact verify the target account action before unlocking your claim.'}</p></div></div>
   <div class="ea"><div class="panel"><div class="pb" style="padding-top:20px" id="eSteps">${earnSteps()}</div></div><aside class="side">${live('eMe', earnSide)}</aside></div>`; }
 function earnSteps() { const me = ME(), t = T(ui.earnMint); const st = (n, done, title, body) => `<div class="estep${done ? ' done' : ''}"><span class="num">${done ? '✓' : n}</span><div class="body"><h3>${title}</h3>${body}</div></div>`;
   let s1;
@@ -345,7 +345,7 @@ function renderChrome() { if (!S) return; const me = ME(), el = $('#acct');
   el.innerHTML = me ? `<span class="acav" style="overflow:hidden">${av(me, 40)}</span><span class="acn"><b>@${esc(me.handle)}</b><small>${sol(me.claimable)} to claim</small></span>` : `<span class="acav" style="overflow:hidden"><img class="logo" src="${LOGO}" alt=""></span><span class="acn"><b>Start claiming</b><small>${isTest() ? 'Sign in' : 'Connect X'}</small></span>`;
   const wb = $('#walletBtn'); wb.textContent = me ? (me.linked ? short(me.wallet, 4) : '@' + me.handle) : 'Start claiming';
   $('#clockLab').innerHTML = !isTest() ? '<b>Live</b> · Solana mainnet' : S.speed === 0 || (S.clock && S.clock.speed === 0) ? 'Clock <b>paused</b>' : `Clock <b>${S.clock.speed}×</b>`;
-  const mb = $('#modebar'); if (isTest() || MODE === 'local') { mb.hidden = false; mb.innerHTML = MODE === 'local' ? '<span><b>Standalone demo.</b> Everything runs in this page. Download the project to run the real server with /admin.</span>' : `<span><b>Test mode.</b> Coins, accounts and posts are simulated. Switch to live mode from /admin when real coins exist.</span>`; }
+  const mb = $('#modebar'); mb.hidden = true;
   else if (S.chain && S.chain.live && !S.chain.ready) { mb.hidden = false; mb.innerHTML = `<span><b>Setup needed.</b> ${esc(S.chain.problem || 'Live mode is not configured.')}</span>`; } else mb.hidden = true;
   const he = $('#hEp'); if (he) he.textContent = en(S.epoch); const hs = $('#hSpeed'); if (hs) hs.textContent = S.clock.speed === 1 ? 'Real time' : `Clock ${S.clock.speed}×`;
   feedPush(); }
@@ -407,8 +407,8 @@ document.addEventListener('focusout', e => { if (e.target.id === 'gSearch') setT
 /* ---------- boot ---------- */
 ui = { open: new Set(), exSort: 'pool', exQ: '', exPage: 0, tTab: 'posts', tPage: 0, bTab: 'epoch', bPage: 0, uPage: 0, earnMint: null };
 (async function boot() {
-  try { if (location.protocol === 'file:' || window.ECHO_STANDALONE) throw 0; apply(await fetchState()); MODE = 'server'; }
-  catch (_) { MODE = 'local'; LOCAL = Core.create({ seed: 77 }); apply(localSnap()); }
-  render(true); setInterval(poll, 2000);
+  try { if (location.protocol === 'file:' || window.ECHO_STANDALONE) throw new Error('Open the deployed Interact site to use live data.'); apply(await fetchState()); MODE = 'server'; }
+  catch (e) { MODE = 'server'; document.querySelector('#app').innerHTML = `<p class="empty">${esc(e.message || 'Live data is temporarily unavailable.')}</p>`; return; }
+  render(true); setInterval(poll, 30000);
 })();
 })();
