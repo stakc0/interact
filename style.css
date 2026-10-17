@@ -1,8 +1,8 @@
 :root{
-  --bg:#07120D;--surface:#0D2017;--surface-2:#123021;--surface-3:#19432E;--line:#24543A;--line-2:#183A29;
-  --ink:#F4FFF8;--ink-2:#A9C5B3;--ink-3:#6F927C;
-  --accent:#5BD894;--accent-2:#86E9B0;--accent-ink:#06120B;--accent-soft:#164B31;
-  --burn:#86E9B0;--burn-soft:#164B31;--warn:#FFD27A;--warn-soft:#4A3715;
+  --bg:#071411;--surface:#0D221C;--surface-2:#143731;--surface-3:#1B4B3F;--line:#28594D;--line-2:#1B433A;
+  --ink:#FFFFFF;--ink-2:#CFE6DA;--ink-3:#91B3A4;
+  --accent:#62DB98;--accent-2:#5FD093;--accent-ink:#071411;--accent-soft:#143731;
+  --burn:#5FD093;--burn-soft:#143731;--warn:#FFD27A;--warn-soft:#4A3715;
   --printer:#020B06;
   --shadow:0 1px 0 rgba(255,255,255,.03),0 18px 40px -18px rgba(0,0,0,.95);
   --f-d:'Geist',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
@@ -460,7 +460,7 @@ details.more summary svg{width:14px;height:14px;transition:transform .2s}
 /* shell */
 .shell{display:grid;grid-template-columns:var(--sbw) minmax(0,1fr);min-height:100vh}
 .sidebar{position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;border-right:1px solid var(--line);padding:16px 14px;overflow:hidden;background:var(--bg);z-index:40}
-.sbrand{display:flex;align-items:center;height:40px;padding-left:8px;margin-bottom:24px}
+.sbrand{display:flex;align-items:center;height:52px;padding-left:8px;margin-bottom:24px}
 .sbrand svg{width:32px;height:32px}
 .sidenav{display:flex;flex-direction:column;gap:3px}
 .sidenav a{display:flex;align-items:center;gap:16px;padding:10px;border-radius:12px;font-size:18px;font-weight:500;color:var(--ink-2);white-space:nowrap;transition:background .15s,color .15s}
@@ -617,8 +617,9 @@ footer .fine{font-size:12.5px;color:var(--ink-3);margin-top:12px;max-width:34ch}
 
 /* ---------- interaction additions ---------- */
 .sbrand{gap:12px}
-.sbrand .mk svg{width:32px;height:32px;display:block}
-.sbrand .wm{font:600 21px/1 var(--f-d);letter-spacing:-.04em}
+.sbrand .mk{display:block;width:112px;height:48px}
+.sbrand .mk img{display:block;width:112px;height:48px;object-fit:contain;border-radius:0;background:transparent}
+.sbrand .wm{display:none}
 @media (min-width:901px){body.sbc .sbrand .wm,body.sbc .sbclock span:last-child{display:none}}
 .sbclock{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-3);padding:10px;margin-top:auto}
 .sbclock b{color:var(--ink-2)}
@@ -710,7 +711,7 @@ footer .fine{font-size:12.5px;color:var(--ink-3);margin-top:12px;max-width:34ch}
 .counter{font:12px var(--f-m);color:var(--ink-3)}
 .plist .rk{width:auto;min-width:18px}
 .counter.over{color:var(--ink);text-decoration:underline}
-.sbrand .mk img,.acav img.logo{display:block;width:32px;height:32px;border-radius:9px}
+.acav img.logo{display:block;width:32px;height:32px;border-radius:9px}
 .brand img{width:26px;height:26px;border-radius:7px}
 .modebar{display:flex;align-items:center;justify-content:center;gap:8px;font:500 12px var(--f-m);color:var(--ink-2);border-bottom:1px solid var(--line);padding:7px 16px;text-align:center;flex-wrap:wrap}
 .modebar b{color:var(--ink)}
