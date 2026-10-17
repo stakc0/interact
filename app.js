@@ -227,7 +227,7 @@ function earnSide() { const me = ME(); if (!me) return `<div class="panel"><div 
    ${S.myClaims.length ? `<div class="panel"><div class="ph"><span class="eyebrow">Claims</span></div><div class="pb"><div class="plist">${S.myClaims.slice(0, 5).map(c => `<a href="#earn"><span style="min-width:0"><span class="nm" style="display:block">${sol(c.amt)}</span><span class="faint mono" style="font-size:11px">${c.sig ? `<a target="_blank" rel="noopener" href="https://solscan.io/tx/${c.sig}">${c.status} ↗</a>` : c.status}</span></span><span class="val mono faint">${ago(c.ts)} ago</span></a>`).join('')}</div></div></div>` : ''}`; }
 
 /* ---------- Launch ---------- */
-const L = { name: '', ticker: '', desc: '', img: null, minHold: .05, agree: false, busy: 0, done: null, dev: '', sig: null };
+const L = { name: '', ticker: '', desc: '', img: null, minHold: .05, agree: false, busy: 0, done: null, dev: '', sig: null, target: '', action: 'keyword', keyword: '' };
 const chainReady = () => !!(S.chain && S.chain.live && S.chain.ready);
 function launchPage() { return `<div class="phead"><div><span class="eyebrow">Launch</span><h1 style="margin-top:10px">Launch a coin that pays its promoters</h1><p>Creator fees route to the Interact pool at launch and never to you. Your upside is holding the coin, the same as everyone else.</p></div></div>
   ${isTest() || chainReady() ? '' : `<p class="notice" style="margin-bottom:16px">Launching is switched off until the server is fully set up${S.chain && S.chain.problem ? ': ' + esc(S.chain.problem) : '.'}</p>`}
@@ -237,12 +237,14 @@ function lBody() { if (L.done && T(L.done)) { const t = T(L.done); return `<div 
    <div class="frow"><div class="field"><label for="lName">Name</label><input class="inp" id="lName" maxlength="32" value="${esc(L.name)}" placeholder="Quiet Otter"></div><div class="field"><label for="lTicker">Ticker</label><div class="pre"><span>$</span><input class="inp" id="lTicker" maxlength="10" value="${esc(L.ticker)}" placeholder="OTTER"></div></div></div>
    <div class="field"><span class="flab">Image</span><div class="upl"><div class="ph0" id="lImgPrev">${L.img ? `<img src="${L.img}" alt="">` : '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16l4-4 3 3 5-6 4 5M4 5h16v14H4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>'}</div><label class="btn sm" for="lImg">Choose image</label><input type="file" id="lImg" accept="image/*" class="sr"></div></div>
    <div class="field"><label for="lDesc">Description</label><textarea class="inp" id="lDesc" maxlength="240" placeholder="What is this coin about?">${esc(L.desc)}</textarea></div>
+   <div class="field"><label for="lTarget">Target X account</label><input class="inp" id="lTarget" maxlength="15" value="${esc(L.target)}" placeholder="elon"><span class="hint">Creator fees unlock when this verified account interacts.</span></div>
+   <div class="frow"><div class="field"><label for="lAction">Required interaction</label><select class="inp" id="lAction"><option value="keyword" ${L.action === 'keyword' ? 'selected' : ''}>Reply with keyword</option><option value="like" ${L.action === 'like' ? 'selected' : ''}>Like</option><option value="reply" ${L.action === 'reply' ? 'selected' : ''}>Reply</option><option value="repost" ${L.action === 'repost' ? 'selected' : ''}>Repost</option></select></div><div class="field"><label for="lKeyword">Keyword</label><input class="inp" id="lKeyword" maxlength="80" value="${esc(L.keyword)}" placeholder="INTERACT" ${L.action !== 'keyword' ? 'disabled' : ''}></div></div>
    ${isTest() ? '' : `<div class="field"><label for="lDev">First buy (optional, SOL)</label><input class="inp" id="lDev" inputmode="decimal" value="${esc(L.dev)}" placeholder="0"><span class="hint">Buys your coin in the same transaction so nobody snipes it before you. Up to ${S.chain ? S.chain.maxDevBuySol : 5} SOL. You pay about 0.02 SOL of Solana rent and fees to create the coin.</span></div>`}
    <div class="field"><span class="flab">Minimum hold to earn</span><div class="seg" role="group">${[.01, .05, .1].map(v => `<button type="button" data-act="lhold" data-v="${v}" aria-pressed="${L.minHold === v}">${v}% of supply</button>`).join('')}</div><span class="hint">Bagworkers must hold this much at settlement. Higher keeps bots out; lower lets more people in.</span></div>
    <div class="field"><span class="flab">Creator fees</span>${splitBar().replace('class="splitbig"', 'class="splitbig" style="margin:0"')}<div class="zero"><span>Your share as deployer</span><b>0%</b></div><span class="hint">Fixed for every coin.</span></div>
    <hr class="divider" style="margin:0"><label class="check"><input type="checkbox" id="lAgree" ${L.agree ? 'checked' : ''}><span>I understand creator fees from this coin are routed to bagworkers permanently and I can't redirect them.</span></label>
    <div id="lSubmit">${lSubmit()}</div></form>`; }
-const lValid = () => !!(L.name.trim() && L.ticker.trim() && L.agree && (isTest() || (chainReady() && L.img)));
+const lValid = () => !!(L.name.trim() && L.ticker.trim() && L.target.trim() && L.action && (L.action !== 'keyword' || L.keyword.trim()) && L.agree && (isTest() || (chainReady() && L.img)));
 const LIVE_STEPS = ['Upload image and metadata', 'Approve in your wallet', 'Send to Solana', 'Confirm Interact receives the creator fees'];
 function lSubmit() { if (L.busy) return `<ol class="steps">${(isTest() ? ['Upload image and metadata', 'Create mint and bonding curve', 'Route creator fees to Interact', 'Check creator on chain', 'Open epoch #' + en(S.epoch)] : LIVE_STEPS).map((s, i) => `<li class="${i < L.busy - 1 ? 'done' : i === L.busy - 1 ? 'on' : ''}"><span class="s">${i < L.busy - 1 ? '✓' : i + 1}</span>${s}</li>`).join('')}</ol>`;
   return `<button type="submit" class="btn pri lg" style="width:100%" ${lValid() ? '' : 'disabled'}>Launch $${esc(L.ticker || 'COIN')}${isTest() ? ' (test)' : ''}</button><p class="hint" style="margin-top:8px;text-align:center">${isTest() ? (lValid() ? 'Test mode: the coin is created in Interact\'s database, not on chain.' : 'Add a name and ticker, and confirm the fee routing.') : !chainReady() ? 'Launching is switched off on this server.' : lValid() ? 'Your wallet will ask you to approve. The coin is created on pump.fun.' : 'Add a name, ticker and image, and confirm the fee routing.'}</p>`; }
@@ -261,26 +263,28 @@ async function runLaunch() {
 const getWallet = () => { const w = (window.phantom && window.phantom.solana) || window.solflare || window.backpack || window.solana; if (!w) throw new Error('No Solana wallet found in this browser. Install Phantom, Solflare or Backpack.'); return w; };
 async function walletConnect() { const w = getWallet(); const r = await w.connect(); const pk = (r && r.publicKey) || w.publicKey; if (!pk) throw new Error('The wallet did not connect.'); return { w, wallet: pk.toString() }; }
 let web3P = null;
-const loadWeb3 = () => web3P || (web3P = new Promise((ok, bad) => { if (window.solanaWeb3) return ok(window.solanaWeb3); const sc = document.createElement('script'); sc.src = '/vendor/web3.js'; sc.onload = () => ok(window.solanaWeb3); sc.onerror = () => { web3P = null; bad(new Error('Could not load the wallet library.')); }; document.head.appendChild(sc); }));
+const loadWeb3 = () => web3P || (web3P = new Promise((ok, bad) => { if (window.solanaWeb3) return ok(window.solanaWeb3); const sc = document.createElement('script'); sc.src = 'https://unpkg.com/@solana/web3.js@1.98.2/lib/index.iife.min.js'; sc.onload = () => ok(window.solanaWeb3); sc.onerror = () => { web3P = null; bad(new Error('Could not load the wallet library.')); }; document.head.appendChild(sc); }));
 const b64ToBytes = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 const bytesToB64 = b => { let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
 async function postJSON(path, body) {
   const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body || {}) });
   const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Something went wrong.'); return j; }
+function dataImageFile(dataUrl, name = 'token-image.png') { const [head, raw] = String(dataUrl || '').split(','); if (!raw) return null; const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png'; const bytes = Uint8Array.from(atob(raw), c => c.charCodeAt(0)); return new File([bytes], name, { type: mime }); }
+async function prepareLaunch(body) { const form = new FormData(); form.set('launch', JSON.stringify(body)); const file = dataImageFile(L.img); if (!file) throw new Error('Choose a token image first.'); form.set('image', file); const r = await fetch('/api/launch/prepare', { method: 'POST', credentials: 'same-origin', body: form }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Could not prepare launch.'); return j; }
 async function runLiveLaunch() {
   const step = i => { L.busy = i; const s = $('#lSubmit'); if (s) s.innerHTML = lSubmit(); };
   try {
     const { w, wallet } = await walletConnect();
     step(1);
-    const [solanaWeb3, prep] = await Promise.all([loadWeb3(), postJSON('/api/launch/prepare', { name: L.name, ticker: L.ticker, desc: L.desc, minHold: L.minHold, img: L.img, agree: L.agree, devBuySol: parseFloat(L.dev) || 0, wallet })]);
+    const [solanaWeb3, prep] = await Promise.all([loadWeb3(), prepareLaunch({ name: L.name, symbol: L.ticker, description: L.desc, wallet, totalSupply: '1000000000', decimals: 6, targetUsername: L.target, action: L.action, keyword: L.keyword })]);
     step(2);
-    const txs = [prep.tx, prep.buyTx].filter(Boolean).map(t => solanaWeb3.Transaction.from(b64ToBytes(t)));
+    const txs = (prep.transactions || []).map(t => solanaWeb3.VersionedTransaction.deserialize(b64ToBytes(t.transaction)));
     // One approval for both when the first buy needs its own transaction.
     const signed = txs.length > 1 && w.signAllTransactions ? await w.signAllTransactions(txs) : [await w.signTransaction(txs[0]), ...(txs[1] ? [await w.signTransaction(txs[1])] : [])];
     step(3);
     const wire = t => { const b = t.serialize({ requireAllSignatures: false, verifySignatures: false }); return bytesToB64(b instanceof Uint8Array ? b : Uint8Array.from(b)); };
     step(4);
-    const r = await postJSON('/api/launch/submit', { mint: prep.mint, tx: wire(signed[0]), buyTx: signed[1] ? wire(signed[1]) : undefined });
+    const r = await postJSON('/api/launch/confirm', { intentId: prep.intentId, transaction: wire(signed[0]), name: L.name, symbol: L.ticker, description: L.desc, metadataUri: prep.metadataUri, targetUsername: L.target, action: L.action, keyword: L.keyword });
     if (r.buyError) toast(`<span>${esc(r.buyError)}</span>`);
     apply(await fetchState()); L.done = r.mint; L.sig = r.signature;
     toast(`<span>Launched <b>$${esc(L.ticker)}</b> on pump.fun. Its creator fees now pay bagworkers.</span>`);
@@ -377,7 +381,7 @@ const ACT = {
   claim: a => run(async () => { if (a) a.disabled = true; try { const r = await api('/api/claim', {}); rerenderEarn(); toast(`<span>Claimed <b>${sol(r.claim.amt)}</b>${r.claim.status === 'simulated' ? ' (test)' : r.claim.sig ? ` · <a target="_blank" rel="noopener" href="https://solscan.io/tx/${r.claim.sig}">view</a>` : ''}</span>`); } finally { if (a) a.disabled = false; } }),
   earnfor(a) { ui.earnMint = a.dataset.v; },
   lhold(a) { L.minHold = parseFloat(a.dataset.v); [...a.parentElement.children].forEach(b => b.setAttribute('aria-pressed', b === a)); },
-  lreset() { Object.assign(L, { name: '', ticker: '', desc: '', img: null, agree: false, done: null, dev: '', sig: null }); $('#lBody').innerHTML = lBody(); $('#lPrev').innerHTML = lPrev(); }
+  lreset() { Object.assign(L, { name: '', ticker: '', desc: '', img: null, agree: false, done: null, dev: '', sig: null, target: '', action: 'keyword', keyword: '' }); $('#lBody').innerHTML = lBody(); $('#lPrev').innerHTML = lPrev(); }
 };
 document.addEventListener('click', e => { const a = e.target.closest('[data-act]'); if (!a) return; const act = a.dataset.act;
   if (a.tagName === 'A') { if (ACT[act]) ACT[act](a, e); return; } if (a.type !== 'submit') e.preventDefault(); ACT[act] && ACT[act](a, e); });
@@ -389,8 +393,8 @@ document.addEventListener('input', e => { const id = e.target.id, v = e.target.v
   if (id === 'eHandle') D.handle = v; if (id === 'eFol') D.followers = v; if (id === 'eAge') D.age = v;
   if (id && id[0] === 'c' && $('#cOut')) calcRun();
   if (id === 'lDev') { L.dev = v.replace(/[^0-9.]/g, ''); return; }
-  const m = { lName: 'name', lTicker: 'ticker', lDesc: 'desc' }; if (m[id]) { L[m[id]] = id === 'lTicker' ? v.toUpperCase().replace(/[^A-Z0-9]/g, '') : v; if (id === 'lTicker') e.target.value = L.ticker; $('#lPrev').innerHTML = lPrev(); $('#lSubmit').innerHTML = lSubmit(); } });
-document.addEventListener('change', async e => { const id = e.target.id; if (id === 'eMint') { ui.earnMint = e.target.value; rerenderEarn(); } if (id === 'lAgree') { L.agree = e.target.checked; $('#lSubmit').innerHTML = lSubmit(); }
+  const m = { lName: 'name', lTicker: 'ticker', lDesc: 'desc', lTarget: 'target', lKeyword: 'keyword' }; if (m[id]) { L[m[id]] = id === 'lTicker' ? v.toUpperCase().replace(/[^A-Z0-9]/g, '') : v; if (id === 'lTicker') e.target.value = L.ticker; $('#lPrev').innerHTML = lPrev(); $('#lSubmit').innerHTML = lSubmit(); } });
+document.addEventListener('change', async e => { const id = e.target.id; if (id === 'eMint') { ui.earnMint = e.target.value; rerenderEarn(); } if (id === 'lAgree') { L.agree = e.target.checked; $('#lSubmit').innerHTML = lSubmit(); } if (id === 'lAction') { L.action = e.target.value; $('#lKeyword').disabled = L.action !== 'keyword'; $('#lSubmit').innerHTML = lSubmit(); }
   if (id === 'lImg' && e.target.files[0]) { try { L.img = await shrinkImage(e.target.files[0]); $('#lImgPrev').innerHTML = `<img src="${L.img}" alt="">`; $('#lPrev').innerHTML = lPrev(); } catch (_) { toast('<span>That image could not be read. Try a PNG or JPG.</span>'); } } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#modal').hidden) closeModal(); sbDrawer(false); $('#gDD').innerHTML = ''; }
   if (e.key === 'Enter' && e.target.id === 'gSearch') { e.preventDefault(); ui.exQ = e.target.value; e.target.value = ''; $('#gDD').innerHTML = ''; location.hash === '#explore' ? render(false) : location.hash = 'explore'; }
