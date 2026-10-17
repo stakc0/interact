@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { listLaunches, directPrepare, directConfirm } from '../launch-direct.mjs';
 
-const PRIMARY_CA = process.env.INTERACT_PRIMARY_CA || 'CcqXU2nnLF9dmiZwzjMqMcej2DyRWteu46sLMuW3pump';
+const PRIMARY_CA = process.env.INTERACT_PRIMARY_CA || 'gmxZvNZsveV2AaXsr3HjG84KGAeDJXEoehSJ1VVpump';
 const INTERACT_FEE_WALLET = process.env.INTERACT_CREATOR_FEE_RECIPIENT || process.env.CREATOR_FEE_RECIPIENT || '5ABeaFSQ3UNmKgGouX1HTrsCzTE7NDFxc3Q6Yggp8TsL';
 const RPC_URL = process.env.SVS_LITE_RPC_URL || process.env.SVS_RPC_URL || process.env.SOLANA_RPC_URL || '';
 const RPC_KEY = process.env.SVS_LITE_RPC_API_KEY || process.env.SVS_RPC_API_KEY || process.env.SOLANA_RPC_API_KEY || '';
