@@ -1,6 +1,7 @@
 import Busboy from 'busboy';
 import { Connection, Keypair, PublicKey, TransactionMessage, VersionedTransaction, SystemProgram } from '@solana/web3.js';
-import { PUMP_SDK } from '@pump-fun/pump-sdk';
+import pumpSdk from '@pump-fun/pump-sdk';
+const { PUMP_SDK } = pumpSdk;
 import BN from 'bn.js';
 const UNCURVE_SITE = 'https://uncurve-launch.vercel.app';
 const DB_REF = process.env.WEBD_SUPABASE_PROJECT_REF || 'saneojmlgtmvtglgwdcj';
