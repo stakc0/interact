@@ -346,7 +346,6 @@ function renderChrome() { if (!S) return; const me = ME(), el = $('#acct');
   const wb = $('#walletBtn'); wb.textContent = me ? (me.linked ? short(me.wallet, 4) : '@' + me.handle) : 'Start claiming';
   $('#clockLab').innerHTML = !isTest() ? '<b>Live</b> · Solana mainnet' : S.speed === 0 || (S.clock && S.clock.speed === 0) ? 'Clock <b>paused</b>' : `Clock <b>${S.clock.speed}×</b>`;
   const mb = $('#modebar'); mb.hidden = true;
-  else if (S.chain && S.chain.live && !S.chain.ready) { mb.hidden = false; mb.innerHTML = `<span><b>Setup needed.</b> ${esc(S.chain.problem || 'Live mode is not configured.')}</span>`; } else mb.hidden = true;
   const he = $('#hEp'); if (he) he.textContent = en(S.epoch); const hs = $('#hSpeed'); if (hs) hs.textContent = S.clock.speed === 1 ? 'Real time' : `Clock ${S.clock.speed}×`;
   feedPush(); }
 function sbDrawer(o) { document.body.classList.toggle('sbo', o); $('#scrim').hidden = !o; }
