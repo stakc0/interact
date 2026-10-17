@@ -20,5 +20,7 @@ create index if not exists interact_claims_mint_idx on public.interact_claims(mi
 alter table public.interact_x_users enable row level security;
 alter table public.interact_launches enable row level security;
 alter table public.interact_claims enable row level security;
-create policy if not exists "public reads interact launches" on public.interact_launches for select using (true);
-create policy if not exists "public reads interact claims" on public.interact_claims for select using (true);
+drop policy if exists "public reads interact launches" on public.interact_launches;
+create policy "public reads interact launches" on public.interact_launches for select using (true);
+drop policy if exists "public reads interact claims" on public.interact_claims;
+create policy "public reads interact claims" on public.interact_claims for select using (true);
